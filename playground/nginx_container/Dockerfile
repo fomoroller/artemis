@@ -14,6 +14,16 @@
 
 FROM nginx:1.27-alpine
 
+# eMudhra CA distrust policy (2026-10-21)
+RUN apk add --no-cache --upgrade ca-certificates \
+    && sed -i -E 's#^mozilla/(Comodo_AAA_Services_root|emSign_ECC_Root_CA_-_G3)\.crt$#!&#' /etc/ca-certificates.conf \
+    && update-ca-certificates --fresh
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+    SSL_CERT_DIR=/opt/emudhra-empty-cert-directory \
+    REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    AWS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
 # Install openssl for auto-generating self-signed dev certificates and curl for healthchecks
 RUN apk add --no-cache openssl curl bash
 

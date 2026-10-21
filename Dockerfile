@@ -14,6 +14,18 @@
 
 FROM node:22-bookworm-slim AS frontend-builder
 
+# eMudhra CA distrust policy (2026-10-21)
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && sed -i -E 's#^mozilla/(Comodo_AAA_Services_root|emSign_ECC_Root_CA_-_G3)\.crt$#!&#' /etc/ca-certificates.conf \
+    && update-ca-certificates --fresh \
+    && rm -rf /var/lib/apt/lists/*
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+    SSL_CERT_DIR=/opt/emudhra-empty-cert-directory \
+    REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    AWS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV NODE_OPTIONS=--use-openssl-ca
+
 WORKDIR /build/apps/showcase_ui
 COPY apps/showcase_ui/package.json apps/showcase_ui/package-lock.json ./
 RUN npm ci
@@ -24,6 +36,17 @@ RUN npm run build
 
 
 FROM python:3.12-slim AS wheel-builder
+
+# eMudhra CA distrust policy (2026-10-21)
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && sed -i -E 's#^mozilla/(Comodo_AAA_Services_root|emSign_ECC_Root_CA_-_G3)\.crt$#!&#' /etc/ca-certificates.conf \
+    && update-ca-certificates --fresh \
+    && rm -rf /var/lib/apt/lists/*
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+    SSL_CERT_DIR=/opt/emudhra-empty-cert-directory \
+    REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    AWS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 WORKDIR /build
 COPY artemis/ ./artemis/
@@ -41,6 +64,17 @@ RUN python -m pip wheel --no-cache-dir --no-deps --wheel-dir /wheels ./packages/
 
 
 FROM python:3.12-slim
+
+# eMudhra CA distrust policy (2026-10-21)
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && sed -i -E 's#^mozilla/(Comodo_AAA_Services_root|emSign_ECC_Root_CA_-_G3)\.crt$#!&#' /etc/ca-certificates.conf \
+    && update-ca-certificates --fresh \
+    && rm -rf /var/lib/apt/lists/*
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+    SSL_CERT_DIR=/opt/emudhra-empty-cert-directory \
+    REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    AWS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 WORKDIR /app
 
